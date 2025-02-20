@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Classical Composer’s Symphony - Un jeu musical par Colin Soldati">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Classical Composer’s Symphony</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a, #4a2c2a);
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: manipulation; /* Optimisation tactile */
+        }
+
+        #start-screen, #game-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
+
+        #start-screen {
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2;
+            opacity: 1;
+        }
+
+        #start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        p {
+            font-size: 1rem;
+            text-align: center;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background: #d4af37;
+            border: none;
+            color: #1a1a1a;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+        }
+
+        #game-screen {
+            opacity: 0;
+        }
+
+        #game-screen.active {
+            opacity: 1;
+        }
+
+        #game-area {
+            width: 100%;
+            max-width: 400px;
+            height: 80vh;
+            position: relative;
+            background: url('https://via.placeholder.com/400x600?text=Partition') no-repeat center;
+            background-size: cover;
+            border: 2px solid #d4af37;
+            overflow: hidden;
+        }
+
+        .note {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: url('https://via.placeholder.com/40?text=♪') no-repeat center;
+            background-size: contain;
+            animation: fall 3s linear;
+        }
+
+        @keyframes fall {
+            0% { top: -40px; }
+            100% { top: 100%; }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.2rem;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 10px;
+            font-size: 0.8rem;
+            color: #d4af37;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            p { font-size: 0.9rem; }
+            button { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <h1>Classical Composer’s Symphony</h1>
+        <p>Recomposez les mélodies classiques en plaçant les notes tombantes dans le bon ordre. Touchez les notes pour les attraper avant qu'elles ne disparaissent !</p>
+        <button onclick="startGame()">Jouer</button>
+    </div>
+    <div id="game-screen">
+        <div id="score">Score: 0</div>
+        <div id="game-area"></div>
+    </div>
+    <footer>Éditeur : Colin Soldati</footer>
+
+    <script>
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score');
+        let score = 0;
+        let gameActive = false;
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.add('active');
+            gameActive = true;
+            spawnNotes();
+        }
+
+        function spawnNotes() {
+            if (!gameActive) return;
+
+            const note = document.createElement('div');
+            note.classList.add('note');
+            note.style.left = `${Math.random() * (gameArea.offsetWidth - 40)}px`;
+            gameArea.appendChild(note);
+
+            note.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                score += 10;
+                scoreDisplay.textContent = `Score: ${score}`;
+                note.remove();
+            });
+
+            setTimeout(() => {
+                if (note.parentElement) note.remove();
+            }, 3000);
+
+            setTimeout(spawnNotes, Math.random() * 2000 + 1000);
+        }
+
+        // Service Worker pour PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
